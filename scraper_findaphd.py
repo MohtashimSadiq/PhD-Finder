@@ -21,6 +21,7 @@ import argparse
 import time
 import urllib.parse as urlparse
 
+import cloudscraper
 import requests
 import yaml
 from bs4 import BeautifulSoup
@@ -44,11 +45,29 @@ def build_search_url(base_url, keyword, page=1):
 
 
 def fetch(url, settings, session):
-    """Single HTTP GET with the configured user-agent and timeout."""
-    headers = {"User-Agent": settings["user_agent"]}
-    resp = session.get(url, headers=headers, timeout=settings["request_timeout"])
+    """
+    Single HTTP GET via a cloudscraper session, which attempts to solve
+    Cloudflare's JS/browser-fingerprint challenge the way a real browser
+    would. Falls back to raising the original error if it still fails --
+    that tells us the block is stronger than basic Cloudflare (e.g. IP
+    reputation block on the whole GitHub Actions range), which is a
+    different problem than a JS challenge and needs a different fix
+    (e.g. running from a residential IP like the Pi).
+    """
+    resp = session.get(url, timeout=settings["request_timeout"])
     resp.raise_for_status()
     return resp.text
+
+
+def make_session(settings):
+    """
+    cloudscraper wraps requests.Session with logic to detect and solve
+    common Cloudflare anti-bot challenges. It still won't help if the
+    block is a flat IP-reputation ban rather than a JS challenge.
+    """
+    return cloudscraper.create_scraper(
+        browser={"browser": "chrome", "platform": "windows", "mobile": False}
+    )
 
 
 def parse_listing_page(html, base_domain="https://www.findaphd.com"):
@@ -187,7 +206,7 @@ def run(mode="backfill", config_path="config.yaml", db_path="phd_finder.sqlite3"
         print("findaphd source disabled in config.yaml -- skipping")
         return
 
-    session = requests.Session()
+    session = make_session(config["scrape_settings"])
     grand_total, grand_new = 0, 0
 
     with get_conn(db_path) as conn:
