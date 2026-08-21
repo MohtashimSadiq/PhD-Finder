@@ -14,6 +14,9 @@ on:
   schedule:
     - cron: "0 6 * * *"   # recurring run every day at 06:00 UTC (edit as needed)
 
+permissions:
+  contents: write   # needed so the workflow can commit/push phd_finder.sqlite3 back to the repo
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
