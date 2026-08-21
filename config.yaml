@@ -1,0 +1,57 @@
+# Edit this file to change what the system searches for and how it scores matches.
+# Nothing else in the codebase should need to change when you update your topics.
+
+topics:
+  - name: "embedded AI / edge ML"
+    keywords:
+      - "embedded machine learning"
+      - "edge AI"
+      - "TinyML"
+      - "IoT sensor fusion"
+
+  - name: "clinical NLP"
+    keywords:
+      - "clinical NLP"
+      - "medical text mining"
+      - "healthcare AI"
+
+  # Add more topics here, same shape:
+  # - name: "topic label"
+  #   keywords: ["phrase 1", "phrase 2", ...]
+
+criteria:
+  funding: "fully_funded"        # fully_funded | partial | any
+  countries:
+    - "Germany"
+    - "Netherlands"
+    - "Switzerland"
+    - "EU-any"
+  languages_ok:
+    - "English"
+    - "German"
+  start_after: "2026-09-01"
+  hard_excludes:
+    - "self-funded"
+  # Free-text notes Gemini will weigh when scoring, e.g. background fit:
+  notes: >
+    Candidate has an M.Sc. in Mechatronics and a background in embedded
+    hardware/systems engineering. Prefer positions with a hardware, sensor,
+    or applied-ML component over purely theoretical ones.
+
+sources:
+  findaphd:
+    enabled: true
+    base_url: "https://www.findaphd.com/phds/"
+    max_pages_per_keyword: 10   # safety cap for the pagination sweep
+  euraxess:
+    enabled: false   # scraper not built yet
+  jobsacuk:
+    enabled: false
+  daad:
+    enabled: false
+
+scrape_settings:
+  concurrency: 3            # max parallel requests
+  delay_seconds: 1.5        # delay between requests to the same domain
+  request_timeout: 20
+  user_agent: "Mozilla/5.0 (compatible; PhDFinderBot/1.0; personal research tool)"
