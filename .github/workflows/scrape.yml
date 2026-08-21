@@ -1,0 +1,43 @@
+name: PhD Finder Scraper
+
+on:
+  workflow_dispatch:      # manual "Run workflow" button in GitHub UI, for testing
+    inputs:
+      mode:
+        description: "backfill (deep, first run) or recurring (shallow, daily)"
+        required: true
+        default: "backfill"
+        type: choice
+        options:
+          - backfill
+          - recurring
+  schedule:
+    - cron: "0 6 * * *"   # recurring run every day at 06:00 UTC (edit as needed)
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        run: |
+          MODE="${{ github.event.inputs.mode || 'recurring' }}"
+          python scraper_findaphd.py --mode "$MODE"
+
+      - name: Commit updated database back to repo
+        run: |
+          git config user.name "phd-finder-bot"
+          git config user.email "actions@github.com"
+          git add phd_finder.sqlite3
+          git diff --cached --quiet || git commit -m "Update PhD listings DB ($(date -u +%Y-%m-%d))"
+          git push
